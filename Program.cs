@@ -2,55 +2,77 @@
 
 namespace TileGamePuzzle
 {
-    public static class BlankTile
-    {
-        public static int X { get; set; }
-        public static int Y { get; set; }
-    }
-
     class Program
     {
-        private static void Main()
-        {
-            var tiles = new string[4, 4];
+        public static int Rows = 4;
+        public static int Columns = 4;
+        public static int ShuffleCount = 500;
+        public static string[,] TileStrings = new string[Rows, Columns];
+        public static Tile BlankTile = new Tile();
 
-            InitializeTileValues(tiles);
-            RandomizeTiles(tiles);
+        static void Main()
+        {
+            InitializeTileValues();
+            ScramblePuzzle();
 
             while (true)
             {
                 Console.Clear();
-                PrintGameGrid(tiles);
+                PrintGameGrid();
                 var cki = Console.ReadKey();
                 if (cki.Key == ConsoleKey.Q)
                 {
                     return;
                 }
-
-                MoveTile(cki.Key, tiles);
-                if (!IsAWinner(tiles))
+                if (cki.Key == ConsoleKey.C)
                 {
-                    continue;
+                    Console.ForegroundColor = ConsoleColor.DarkBlue;
                 }
-                else
+                if (cki.Key == ConsoleKey.R)
                 {
-                    Console.Clear();
-                    PrintGameGrid(tiles);
-                    Console.WriteLine("You are a winner!");
-                    Console.ReadLine();
-                    return;
+                    Console.ResetColor();
+                }
+                if (cki.Key == ConsoleKey.S)
+                {
+                    SolvePuzzle();
+                }
+
+                MoveTile(cki.Key);
+
+                if (!IsAWinner()) continue;
+                
+                Console.Clear();
+                PrintGameGrid();
+                Console.WriteLine("You are a winner!");
+                Console.ReadLine();
+                return;
+            }
+        }
+
+        private static void SolvePuzzle()
+        {
+            var tile1 = new Tile();
+
+            for (var i = 0; i < Rows; i++)
+            {
+                for (var j = 0; j < Columns; j++)
+                {
+                    if (TileStrings[i, j] != "1") continue;
+
+                    tile1.X = i;
+                    tile1.Y = j;
                 }
             }
         }
 
-        private static bool IsAWinner(string[,] tiles)
+        private static bool IsAWinner()
         {
-            for (var i = 0; i < 4; i++)
+            for (var i = 0; i < Rows; i++)
             {
-                for (var j = 0; j < 4; j++)
+                for (var j = 0; j < Columns; j++)
                 {
-                    if (i == 3 && j == 3) continue;
-                    if (tiles[i, j] != ((4*i) + (j + 1)).ToString())
+                    if ((i == (Rows - 1)) && (j == (Columns - 1))) continue;
+                    if (TileStrings[i, j] != ((Rows * i) + (j + 1)).ToString())
                     {
                         return false;
                     }
@@ -59,97 +81,106 @@ namespace TileGamePuzzle
             return true;
         }
 
-        private static void RandomizeTiles(string[,] tiles)
+        private static void ScramblePuzzle()
         {
             var rand = new Random();
-            for (var i = 0; i < 100; i++)
+            for (var i = 0; i < ShuffleCount; i++)
             {
-                switch (rand.Next()%4)
-                {
-                    case 0:
-                        MoveTile(ConsoleKey.LeftArrow, tiles);
-                        break;
-                    case 1:
-                        MoveTile(ConsoleKey.RightArrow, tiles);
-                        break;
-                    case 2:
-                        MoveTile(ConsoleKey.UpArrow, tiles);
-                        break;
-                    case 3:
-                        MoveTile(ConsoleKey.DownArrow, tiles);
-                        break;
-                }
+                var key = GetRandomDirection(rand.Next());
+                MoveTile(key);
             }
         }
 
-        private static void MoveTile(ConsoleKey key, string[,] tiles)
+        private static ConsoleKey GetRandomDirection(int randomValue)
+        {
+            var key = new ConsoleKey();
+            var direction = randomValue % 4;
+            switch (direction)
+            {
+                case 0:
+                    key = ConsoleKey.LeftArrow;
+                    break;
+                case 1:
+                    key = ConsoleKey.RightArrow;
+                    break;
+                case 2:
+                    key = ConsoleKey.UpArrow;
+                    break;
+                case 3:
+                    key = ConsoleKey.DownArrow;
+                    break;
+            }
+            return key;
+        }
+
+        private static void MoveTile(ConsoleKey key)
         {
             switch (key)
             {
                 case ConsoleKey.LeftArrow:
-                    if ((BlankTile.Y + 1) <= 3)
+                    if ((BlankTile.Y + 1) <= (Columns - 1))
                     {
-                        tiles[BlankTile.X, BlankTile.Y] = tiles[BlankTile.X, BlankTile.Y + 1];
-                        tiles[BlankTile.X, BlankTile.Y + 1] = "";
+                        TileStrings[BlankTile.X, BlankTile.Y] = TileStrings[BlankTile.X, BlankTile.Y + 1];
+                        TileStrings[BlankTile.X, BlankTile.Y + 1] = "";
                         BlankTile.Y++;
                     }
                     break;
                 case ConsoleKey.RightArrow:
                     if ((BlankTile.Y - 1) >= 0)
                     {
-                        tiles[BlankTile.X, BlankTile.Y] = tiles[BlankTile.X, BlankTile.Y - 1];
-                        tiles[BlankTile.X, BlankTile.Y - 1] = "";
+                        TileStrings[BlankTile.X, BlankTile.Y] = TileStrings[BlankTile.X, BlankTile.Y - 1];
+                        TileStrings[BlankTile.X, BlankTile.Y - 1] = "";
                         BlankTile.Y--;
                     }
                     break;
                 case ConsoleKey.UpArrow:
-                    if ((BlankTile.X + 1) <= 3)
+                    if ((BlankTile.X + 1) <= (Rows - 1))
                     {
-                        tiles[BlankTile.X, BlankTile.Y] = tiles[BlankTile.X + 1, BlankTile.Y];
-                        tiles[BlankTile.X + 1, BlankTile.Y] = "";
+                        TileStrings[BlankTile.X, BlankTile.Y] = TileStrings[BlankTile.X + 1, BlankTile.Y];
+                        TileStrings[BlankTile.X + 1, BlankTile.Y] = "";
                         BlankTile.X++;
                     }
                     break;
                 case ConsoleKey.DownArrow:
                     if ((BlankTile.X - 1) >= 0)
                     {
-                        tiles[BlankTile.X, BlankTile.Y] = tiles[BlankTile.X - 1, BlankTile.Y];
-                        tiles[BlankTile.X - 1, BlankTile.Y] = "";
+                        TileStrings[BlankTile.X, BlankTile.Y] = TileStrings[BlankTile.X - 1, BlankTile.Y];
+                        TileStrings[BlankTile.X - 1, BlankTile.Y] = "";
                         BlankTile.X--;
                     }
                     break;
             }
         }
 
-        private static void InitializeTileValues(string[,] tiles)
+        private static void InitializeTileValues()
         {
-            for (var i = 0; i < 4; i++)
+            for (var i = 0; i < Rows; i++)
             {
-                for (var j = 0; j < 4; j++)
+                for (var j = 0; j < Columns; j++)
                 {
-                    tiles[i, j] = ((4*i) + (j + 1)).ToString();
+                    TileStrings[i, j] = ((Rows * i) + (j + 1)).ToString();
                 }
             }
-            tiles[BlankTile.X = 3, BlankTile.Y = 3] = "";
+            TileStrings[BlankTile.X = 3, BlankTile.Y = 3] = "";
         }
 
-        public static void PrintGameGrid(string[,] list )
+        public static void PrintGameGrid()
         {
-            Console.WriteLine("Use arrow keys to move tiles.");
+            Console.WriteLine("Use arrow keys to move TileStrings.");
             Console.WriteLine("Enter 'Q' to quit.\n");
 
             Console.WriteLine("╔═════════════════════════════════╗");
             Console.WriteLine("║ ╔═════╗ ╔═════╗ ╔═════╗ ╔═════╗ ║");
-            Console.WriteLine("║ ║ {0,2}  ║ ║ {1,2}  ║ ║ {2,2}  ║ ║ {3,2}  ║ ║", list[0,0], list[0,1], list[0,2], list[0,3]);
+            Console.WriteLine("║ ║ {0,2}  ║ ║ {1,2}  ║ ║ {2,2}  ║ ║ {3,2}  ║ ║", TileStrings[0,0], TileStrings[0,1], TileStrings[0,2], TileStrings[0,3]);
             Console.WriteLine("║ ╚═════╝ ╚═════╝ ╚═════╝ ╚═════╝ ║");
             Console.WriteLine("║ ╔═════╗ ╔═════╗ ╔═════╗ ╔═════╗ ║");
-            Console.WriteLine("║ ║ {0,2}  ║ ║ {1,2}  ║ ║ {2,2}  ║ ║ {3,2}  ║ ║", list[1,0], list[1,1], list[1,2], list[1,3]);
+            Console.WriteLine("║ ║ {0,2}  ║ ║ {1,2}  ║ ║ {2,2}  ║ ║ {3,2}  ║ ║", TileStrings[1,0], TileStrings[1,1], TileStrings[1,2], TileStrings[1,3]);
             Console.WriteLine("║ ╚═════╝ ╚═════╝ ╚═════╝ ╚═════╝ ║");
             Console.WriteLine("║ ╔═════╗ ╔═════╗ ╔═════╗ ╔═════╗ ║");
-            Console.WriteLine("║ ║ {0,2}  ║ ║ {1,2}  ║ ║ {2,2}  ║ ║ {3,2}  ║ ║", list[2,0], list[2,1], list[2,2], list[2,3]);
+            Console.WriteLine("║ ║ {0,2}  ║ ║ {1,2}  ║ ║ {2,2}  ║ ║ {3,2}  ║ ║", TileStrings[2,0], TileStrings[2,1], TileStrings[2,2], TileStrings[2,3]);
             Console.WriteLine("║ ╚═════╝ ╚═════╝ ╚═════╝ ╚═════╝ ║");
             Console.WriteLine("║ ╔═════╗ ╔═════╗ ╔═════╗ ╔═════╗ ║");
-            Console.WriteLine("║ ║ {0,2}  ║ ║ {1,2}  ║ ║ {2,2}  ║ ║ {3,2}  ║ ║", list[3,0], list[3,1], list[3,2], list[3,3]);
+            Console.WriteLine("║ ║ {0,2}  ║ ║ {1,2}  ║ ║ {2,2}  ║ ║ {3,2}  ║ ║", TileStrings[3,0], TileStrings[3,1], TileStrings[3,2], TileStrings[3,3]);
             Console.WriteLine("║ ╚═════╝ ╚═════╝ ╚═════╝ ╚═════╝ ║");
             Console.WriteLine("╚═════════════════════════════════╝");
         }
